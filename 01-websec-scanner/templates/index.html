@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="topbar">
+  <a class="brand" href="{{ url_for('index') }}">Web App Security Scanner <span>for test applications</span></a>
+</div>
+
+<h1>Find weak spots in your own web app before someone else does.</h1>
+<p class="lede">Point the scanner at a local or test application. It reads headers, cookies, exposed paths and how inputs are handled, then reports each issue with evidence and a fix. It never exploits anything.</p>
+
+{% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+<div class="grid">
+  <form class="panel" method="post" action="{{ url_for('scan') }}" id="scan-form">
+    <div class="field">
+      <label for="target">Target URL</label>
+      <input type="text" id="target" name="target" value="{{ form.target }}" placeholder="http://127.0.0.1:5001" required autocomplete="off" spellcheck="false">
+      <div class="hint">Localhost and private-network addresses are allowed by default.</div>
+    </div>
+
+    <fieldset>
+      <legend>What to check</legend>
+      {% for key, label, desc in checks %}
+      <label class="check"><input type="checkbox" name="checks" value="{{ key }}" {% if key in form.checks %}checked{% endif %}>
+        <span><b>{{ label }}</b> <span class="hint">{{ desc }}</span></span></label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="row field">
+      <div>
+        <label for="max_pages">Pages to crawl</label>
+        <input type="number" id="max_pages" name="max_pages" min="1" max="50" value="{{ form.max_pages }}">
+      </div>
+      <div>
+        <label for="delay">Delay between requests (ms)</label>
+        <input type="number" id="delay" name="delay" min="0" max="5000" step="50" value="{{ form.delay }}">
+      </div>
+    </div>
+
+    <label class="check"><input type="checkbox" name="test_post" value="1" {% if form.test_post %}checked{% endif %}>
+      <span><b>Also test POST forms</b> <span class="hint">Submits forms with a harmless marker value. Leave off if submissions change data.</span></span></label>
+
+    {% if allow_external %}
+    <label class="check"><input type="checkbox" name="authorized" value="1">
+      <span><b>I own this target or have written permission to test it.</b> <span class="hint">Required for anything that is not a local or private address.</span></span></label>
+    {% endif %}
+
+    <p style="margin-top:24px"><button type="submit" id="go">Start scan</button></p>
+  </form>
+
+  <aside>
+    <div class="panel quiet">
+      <h2>What you get</h2>
+      <ul class="plain">
+        <li>A grade and score for the target</li>
+        <li>Findings grouped by severity, each with evidence</li>
+        <li>A plain-language fix for every finding</li>
+        <li>JSON and HTML downloads of the report</li>
+      </ul>
+      <h2>What it will not do</h2>
+      <ul class="plain">
+        <li>Send exploit payloads or attack strings</li>
+        <li>Guess passwords or brute-force paths</li>
+        <li>Send PUT or DELETE requests</li>
+      </ul>
+      <p class="hint">No local test app handy? Run <code>python demo_target.py</code> and scan <code>http://127.0.0.1:5001</code>.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+  document.getElementById('scan-form').addEventListener('submit', function () {
+    var b = document.getElementById('go'); b.disabled = true; b.textContent = 'Scanning…';
+  });
+</script>
+{% endblock %}

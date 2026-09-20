@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Scan report: {{ r.target }}{% endblock %}
+{% block body %}
+<div class="topbar">
+  <a class="brand" href="{{ url_for('index') }}">Web App Security Scanner <span>report</span></a>
+  <span class="hint">{{ r.started }} UTC</span>
+</div>
+
+<section class="summary">
+  <div class="grade {{ r.grade }}" aria-label="Grade {{ r.grade }}">{{ r.grade }}</div>
+  <div>
+    <h1 style="font-size:1.6rem;margin-bottom:0">{{ 'No issues found' if total == 0 else total ~ (' finding' if total == 1 else ' findings') }}</h1>
+    <p class="target">{{ r.target }}</p>
+    <p class="score">{{ r.score }}<small> / 100 security score</small></p>
+    {% if total %}
+    <div class="spectrum" role="img" aria-label="Findings by severity">
+      {% for s in order %}{% if r.counts[s] %}<span class="{{ s }}" style="width:{{ (r.counts[s] / total * 100)|round(1) }}%"></span>{% endif %}{% endfor %}
+    </div>
+    <div class="legend">
+      {% for s in order %}<span><i class="dot {{ s }}"></i>{{ r.counts[s] }} {{ s }}</span>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<p class="stats">
+  <span><b>{{ r.pages_crawled }}</b> pages crawled</span>
+  <span><b>{{ r.requests_made }}</b> requests</span>
+  <span><b>{{ r.duration_seconds }}s</b> duration</span>
+  <span>Checks: {{ r.checks|join(', ') }}</span>
+</p>
+
+{% if not standalone %}
+<div class="actions">
+  <a class="btn" href="{{ url_for('report_html', rid=rid) }}">Download HTML report</a>
+  <a class="btn ghost" href="{{ url_for('report_json', rid=rid) }}">Download JSON</a>
+  <a class="btn ghost" href="{{ url_for('index') }}">Scan another target</a>
+</div>
+{% endif %}
+
+{% for n in r.notes %}<div class="warn">{{ n }}</div>{% endfor %}
+
+{% if total %}
+<div class="filters" role="group" aria-label="Filter by severity">
+  <button type="button" data-filter="all" aria-pressed="true">All ({{ total }})</button>
+  {% for s in order %}{% if r.counts[s] %}<button type="button" data-filter="{{ s }}" aria-pressed="false">{{ s|capitalize }} ({{ r.counts[s] }})</button>{% endif %}{% endfor %}
+</div>
+
+<div id="findings">
+{% for f in r.findings %}
+  <details class="finding" data-sev="{{ f.severity }}">
+    <summary>
+      <span class="sev {{ f.severity }}">{{ f.severity }}</span>
+      <span class="ftitle">{{ f.title }}</span>
+      <span class="floc">{{ f.url }}</span>
+    </summary>
+    <div class="fbody">
+      <p>{{ f.description }}</p>
+      <h4>Evidence</h4>
+      <pre>{{ f.evidence }}</pre>
+      <h4>Suggested fix</h4>
+      <p>{{ f.fix }}</p>
+    </div>
+  </details>
+{% endfor %}
+</div>
+{% else %}
+<p class="empty">Nothing was flagged. That does not prove the app is secure. This scanner checks a limited set of common issues.</p>
+{% endif %}
+
+<p class="footnote">Automated scanners find only a subset of problems and can produce false positives. Treat "possible" findings as leads to verify by hand. Scan results reflect only the pages and paths that were reachable during this run.</p>
+
+<script>
+  (function () {
+    var btns = document.querySelectorAll('.filters button');
+    var items = document.querySelectorAll('.finding');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var f = b.dataset.filter;
+        btns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        items.forEach(function (it) { it.style.display = (f === 'all' || it.dataset.sev === f) ? '' : 'none'; });
+      });
+    });
+    window.addEventListener('beforeprint', function () { items.forEach(function (d) { d.open = true; }); });
+  })();
+</script>
+{% endblock %}
