@@ -30,7 +30,7 @@ def scan_folder(folder): # Function to scan a folder and calculate hashes for al
 
     for root, dirs, files in os.walk(folder): # os.walk() goes through the folder and all its subfolders.
         for name in files: # Process every file found in the current folder.
-            path = os.path.abspath(os.path.json(root, name)) # Create the complete path of the current file. os.path.join() combines folder and filename.os.path.abspath() converts it into an absolute path.
+            path = os.path.abspath(os.path.join(root, name)) # Create the complete path of the current file. os.path.join() combines folder and filename.os.path.abspath() converts it into an absolute path.
 
             if path in ignore: # Skip the file if it is the baseline or report file.
                 continue
@@ -70,19 +70,19 @@ def compare(baseline_file, current_file): # Function to compare the trusted base
 
 def build_report(folder, new, modified, deleted, unchanged): # Function to create a human-readable integrity report.
     status = "OK - no changes" if not (new or modified or deleted) else "ALERT - change detected" # If there are no new, modified or deleted files, then status is OK
-    line = [
+    lines = [
         "=" * 60, # Add a separator line.
-        f"Scan time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}" # Add the current date and time.
+        f"Scan time : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", # Add the current date and time.
         f"Folder : {folder}", # Add the monitored folder path.
-        f"Statue : {status}", # Add the scan status.
+        f"Status : {status}", # Add the scan status.
         "-" * 60, # Add another separator.
     ]
     for p in modified: # Add every modified file to the report.
-        line.append(f"[MODIFIED] {p}") # Add [MODIFIED] before the file path.
+        lines.append(f"[MODIFIED] {p}") # Add [MODIFIED] before the file path.
     for p in new: # Add every new file to the report.
-        line.append(f"[NEW] {p}")  # Add [NEW] before the file path.
+        lines.append(f"[NEW] {p}")  # Add [NEW] before the file path.
     for p in deleted: # Add every deleted file to the report.
-        line.append(f"[DELETED] {p}") # Add [DELETED] before the file path.
+        lines.append(f"[DELETED] {p}") # Add [DELETED] before the file path.
     lines += [
         "-" * 60, # Add another separator.
         f"Unchanged: {unchanged} | Modified: {len(modified)} | " # Show the number of unchanged, modified, new and deleted files.
@@ -118,7 +118,7 @@ def create_baseline():
     folder = input("Enter the folder path to monitor: ").strip().strip('"')
 
     if not os.path.isdir(folder):
-        print(f"Director '{folder}' doest not exist.")
+        print(f"Directory '{folder}' doest not exist.")
         return
 
     hashes = scan_folder(folder)
