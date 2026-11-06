@@ -114,8 +114,8 @@ def check_integrity(): # Function to perform one complete integrity check.
 
 
 # MENU ACTIONS------------------------------
-def create_baseline():
-    folder = input("Enter the folder path to monitor: ").strip().strip('"')
+def create_baseline(): 
+    folder = input("Enter the folder path to monitor: ").strip().strip('"') 
 
     if not os.path.isdir(folder):
         print(f"Directory '{folder}' doest not exist.")
